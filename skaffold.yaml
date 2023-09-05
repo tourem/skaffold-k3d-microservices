@@ -1,0 +1,64 @@
+apiVersion: skaffold/v4beta5
+kind: Config
+metadata:
+  name: simple-istio-services
+build:
+  artifacts:
+    - image: localhost:5050/first-service
+      context: first-service
+      #hooks:
+      #  before:
+      #    - command: ["sh", "-c", "mvn clean install -DskipTests"]
+      #      os: [ darwin, linux ]
+      docker:
+        dockerfile: Dockerfile
+        noCache: false
+    - image: localhost:5050/caller-service
+      context: caller-service
+      #hooks:
+      #  before:
+      #    - command: ["sh", "-c", "mvn clean install -DskipTests" ]
+      #      os: [ darwin, linux ]
+      docker:
+        dockerfile: Dockerfile
+        noCache: false
+    - image: localhost:5050/callme-service
+      context: callme-service
+      #sync:
+      #  manual:
+      #    - src: "***/*.java"
+      #      dest: .
+      #hooks:
+      #  before:
+      #    - command: ["sh", "-c", "mvn clean install -DskipTests" ]
+      #      os: [ darwin, linux ]
+      docker:
+        dockerfile: Dockerfile
+        noCache: false
+  tagPolicy:
+    gitCommit: {}
+
+deploy:
+  helm:
+    releases:
+      - name: caller-service
+        chartPath: caller-service/helm
+        valuesFiles:
+          - caller-service/helm/values.yaml
+        version: 0.1.0
+        setValueTemplates:
+          image.tag: '{{.IMAGE_TAG_localhost_5050_caller_service}}@{{.IMAGE_DIGEST_localhost_5050_caller_service}}'
+      - name: callme-service
+        chartPath: callme-service/helm
+        valuesFiles:
+          - callme-service/helm/values.yaml
+        version: 0.1.0
+        setValueTemplates:
+          image.tag: '{{.IMAGE_TAG_localhost_5050_callme_service}}@{{.IMAGE_DIGEST_localhost_5050_callme_service}}'
+      - name: first-service
+        chartPath: first-service/helm
+        valuesFiles:
+          - first-service/helm/values.yaml
+        version: 0.1.0
+        setValueTemplates:
+          image.tag: '{{.IMAGE_TAG_localhost_5050_first_service}}@{{.IMAGE_DIGEST_localhost_5050_first_service}}'

@@ -1,0 +1,51 @@
+apiVersion: skaffold/v4beta6
+kind: Config
+metadata:
+  name: sample-istio-services-master
+build:
+  artifacts:
+    - image: localhost:5050/callme-service
+      jib:
+        project: callme-service
+        args:
+          - -Pjib
+          - -Djib.allowInsecureRegistries=true
+          - -DskipTests
+    - image: localhost:5050/caller-service
+      jib:
+        project: caller-service
+        args:
+          - -Pjib
+          - -Djib.allowInsecureRegistries=true
+          - -DskipTests
+    - image: localhost:5050/first-service
+      jib:
+        project: first-service
+        args:
+          - -Pjib
+          - -Djib.allowInsecureRegistries=true
+          - -DskipTests
+deploy:
+  helm:
+    releases:
+      - name: caller-service
+        chartPath: caller-service/helm
+        valuesFiles:
+          - caller-service/helm/values.yaml
+        version: 0.1.0
+        setValueTemplates:
+          image.tag: '{{.IMAGE_TAG_localhost_5050_caller_service}}@{{.IMAGE_DIGEST_localhost_5050_caller_service}}'
+      - name: callme-service
+        chartPath: callme-service/helm
+        valuesFiles:
+          - callme-service/helm/values.yaml
+        version: 0.1.0
+        setValueTemplates:
+          image.tag: '{{.IMAGE_TAG_localhost_5050_callme_service}}@{{.IMAGE_DIGEST_localhost_5050_callme_service}}'
+      - name: first-service
+        chartPath: first-service/helm
+        valuesFiles:
+          - first-service/helm/values.yaml
+        version: 0.1.0
+        setValueTemplates:
+          image.tag: '{{.IMAGE_TAG_localhost_5050_first_service}}@{{.IMAGE_DIGEST_localhost_5050_first_service}}'

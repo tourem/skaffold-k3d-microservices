@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rest-deployment-{{ .Values.appName}}
+spec:
+  selector:
+    matchLabels:
+      service: {{ .Values.appName}}
+  template:
+    metadata:
+      labels:
+        service: {{ .Values.appName}}
+    spec:
+      containers:
+        - name: {{ .Values.appName}}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: VERSION
+              value: "v1"
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}

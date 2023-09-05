@@ -1,0 +1,9 @@
+apiVersion: skaffold/v2beta22
+kind: Config
+build:
+  artifacts:
+    - image: localhost:5050/caller-service
+      docker:
+        dockerfile: Dockerfile
+  tagPolicy:
+    gitCommit: {}
